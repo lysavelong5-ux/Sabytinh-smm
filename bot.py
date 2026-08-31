@@ -23,12 +23,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("សូមជ្រើសរើសប្រភេទសេវាកម្មខាងក្រោម៖", reply_markup=reply_markup)
         
     elif text == "ទំនាក់ទំនង (Contact)":
-        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង។")
+        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង @neakkrobkrong ។")
         
     elif text == "ព័ត៌មាន (About)":
         await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
 
-# កូដពេលអ្នកប្រើប្រាស់ចុចលើប៊ូតុង Inline (Facebook / TikTok)
+# កូដពេលអ្នកប្រើប្រាស់ចុចលើប៊ូតុង Inline
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -46,7 +46,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.edit_text("សេវាកម្ម TikTok កំពុងរៀបចំ...")
         
     elif query.data == "fb_follow":
-        await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK FOLLOW")
+        price_text = (
+            "📌 **តារាងតម្លៃ FACEBOOK FOLLOW** 📌\n\n"
+            "• 1K = 0.69$\n"
+            "• 5K = 4.5$\n"
+            "• 10K = 8.60$\n\n"
+            "សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះដើម្បីកុម្ម៉ង់!"
+        )
+        await query.message.edit_text(price_text, parse_mode="Markdown")
+        
     elif query.data == "fb_like":
         await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK LIKE")
     elif query.data == "fb_views":
