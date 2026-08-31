@@ -1,15 +1,16 @@
-import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # បង្កើត Button ស្ថិតនៅខាងក្រោមប្រអប់សរសេរសារ
     keyboard = [
-        [InlineKeyboardButton("ចុចទីនេះដើម្បីទៅកាន់ Google", url="https://www.google.com")],
-        [InlineKeyboardButton("ចុចទីនេះដើម្បីទាក់ទងមកខ្ញុំ", callback_data="btn_click")]
+        ["ជំនួយ (Help)", "ទំនាក់ទំនង (Contact)"],
+        ["ព័ត៌មាន (About)"]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    # resize_keyboard=True ជួយឱ្យប៊ូតុងមិនសូវធំខ្លាំងពេកនៅលើអេក្រង់ទូរសព្ទ
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
-    await update.message.reply_text("សួស្តី! នេះគឺជា Bot ដែលមាន Button៖", reply_markup=reply_markup)
+    await update.message.reply_text("សួស្តី! សូមជ្រើសរើសជម្រើសខាងក្រោម៖", reply_markup=reply_markup)
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
