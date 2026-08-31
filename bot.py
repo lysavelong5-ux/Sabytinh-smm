@@ -1,7 +1,7 @@
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-# កូដពេលចាប់ផ្តើម /start បង្ហាញ Reply Keyboard ខាងក្រោម
+# កូដពេលចាប់ផ្តើម /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
@@ -10,24 +10,47 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text("សួស្តី! សូមជ្រើសរើសជម្រើសខាងក្រោម៖", reply_markup=reply_markup)
 
-# កូដពេលអ្នកប្រើប្រាស់ចុចលើប៊ូតុងណាមួយនៅខាងក្រោម
+# កូដពេលអ្នកប្រើប្រាស់ចុច Menu នៅខាងក្រោម
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     
-    # បើចុចចំពាក្យ 🛍️ សេវាកម្ម
     if text == "🛍️ សេវាកម្ម":
         inline_keyboard = [
-            [InlineKeyboardButton("Facebook", url="https://www.facebook.com")],
-            [InlineKeyboardButton("TikTok", url="https://www.tiktok.com")]
+            [InlineKeyboardButton("Facebook", callback_data="menu_facebook")],
+            [InlineKeyboardButton("TikTok", callback_data="menu_tiktok")]
         ]
         reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        await update.message.reply_text("សូមជ្រើសរើសវេបសាយខាងក្រោម៖", reply_markup=reply_markup)
+        await update.message.reply_text("សូមជ្រើសរើសប្រភេទសេវាកម្មខាងក្រោម៖", reply_markup=reply_markup)
         
     elif text == "ទំនាក់ទំនង (Contact)":
-        await update.message.reply_text("นี่คือช่องทางติดต่อเรา: Telegram / Phone")
+        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង។")
         
     elif text == "ព័ត៌មាន (About)":
-        await update.message.reply_text("นี่คือ Bot สำหรับให้บริการต่างๆ ของเรา។")
+        await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
+
+# កូដពេលអ្នកប្រើប្រាស់ចុចលើប៊ូតុង Inline (Facebook / TikTok)
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == "menu_facebook":
+        fb_keyboard = [
+            [InlineKeyboardButton("FACEBOOK FOLLOW", callback_data="fb_follow")],
+            [InlineKeyboardButton("FACEBOOK LIKE", callback_data="fb_like")],
+            [InlineKeyboardButton("FACEBOOK VIEWS", callback_data="fb_views")]
+        ]
+        reply_markup = InlineKeyboardMarkup(fb_keyboard)
+        await query.message.edit_text("សូមជ្រើសរើសសេវាកម្ម Facebook ៖", reply_markup=reply_markup)
+        
+    elif query.data == "menu_tiktok":
+        await query.message.edit_text("សេវាកម្ម TikTok កំពុងរៀបចំ...")
+        
+    elif query.data == "fb_follow":
+        await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK FOLLOW")
+    elif query.data == "fb_like":
+        await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK LIKE")
+    elif query.data == "fb_views":
+        await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK VIEWS")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
@@ -36,6 +59,7 @@ if __name__ == "__main__":
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(CallbackQueryHandler(button_callback))
     
     print("Bot កំពុងដំណើរការ...")
     app.run_polling()
