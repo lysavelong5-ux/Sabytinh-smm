@@ -2,43 +2,45 @@ from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardBu
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 user_states = {}
+user_balances = {}  # សម្រាប់រក្សាទុកទឹកប្រាក់ (Balance) របស់អតិថិជនម្នាក់ៗ
 
-# 1. កូដពេលចាប់ផ្តើម /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
-        "👋 សួស្តីស្វាគមន៍មកកាន់ប្រព័ន្ធបំរើសេវាកម្ម Social Media របស់យើង!\n\n"
-        "✨ ទីនេះមានទទួលកុម្ម៉ង់សេវាកម្ម Facebook និង TikTok ក្នុងតម្លៃសមរម្យ និងឆាប់រហ័ស។\n\n"
-        "👇 សូមចុចជ្រើសរើសជម្រើសខាងក្រោម៖"
+        "Welcome to our Social Media service system!\n\n"
+        "Here you can order Facebook services easily and quickly.\n\n"
+        "Please select an option below:"
     )
     keyboard = [
-        ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-        ["ព័ត៌មាន (About)"]
+        ["🛍️ Services", "🪪 Account"],
+        ["Contact", "About"]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
-# 2. កូដគ្រប់គ្រងរាល់សារ និងប៊ូតុងនៅខាងក្រោម
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text
     
-    # ដំណាក់កាលរង់ចាំ Link
+    # ពិនិត្យមើលទឹកប្រាក់របស់ User ຖ້າទើបចូលប្រើលើកដំបូងកំណត់ជា 0.00$
+    if user_id not in user_balances:
+        user_balances[user_id] = 0.00$ if "0.00$" else 0.00
+
     if user_id in user_states and user_states[user_id].get('step') == 'waiting_link':
         state = user_states[user_id]
         state['link'] = text
         state['step'] = 'waiting_slip'
         
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         
         qr_url = "https://cdn.phototourl.com/free/2026-09-01-1a3cfec5-d60d-4038-b50c-ac83f71acab2.jpg"
         caption = (
-            "🔗 បានទទួល Link រួចរាល់!\n\n"
-            "💳 សូមធ្វើការស្កេន QR Code ខាងលើដើម្បីទូទាត់ប្រាក់ ៖\n\n"
-            "📸 បន្ទាប់ពីបង់ប្រាក់រួច សូម **ផ្ញើរូបភាពវិក្កយបត្រ (Slip)** មកកាន់ឆាតនេះដើម្បីបញ្ជាក់!"
+            "Link received successfully!\n\n"
+            "Please scan the QR Code above to make payment:\n\n"
+            "After payment, please send your payment Slip here!"
         )
         
         try:
@@ -52,13 +54,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         except Exception as e:
             print(f"Error sending QR image: {e}")
-            await update.message.reply_text(
-                f"{caption}\n\n(⚠️ រូបភាព QR Code មានបញ្ហាបន្តិច ប៉ុន្តែអាចបន្តផ្ញើ Slip បាន)",
-                reply_markup=reply_markup
-            )
+            await update.message.reply_text(caption, reply_markup=reply_markup)
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Follow
     if text in ["1K ~ 0.70$", "5K ~ 3.50$", "10K ~ 7.00$", "15K ~ 10.50$", "20K ~ 14.00$", "30K ~ 21.00$", "40K ~ 28.00$", "50K ~ 35.00$"]:
         package_name = text.split(" ~ ")[0]
         user_states[user_id] = {
@@ -66,14 +64,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'package': f"FACEBOOK FOLLOW ({package_name})"
         }
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK FOLLOW ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        await update.message.reply_text(f"You selected: FACEBOOK FOLLOW ({package_name})\n\nPlease send your Facebook Link:", reply_markup=reply_markup)
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Like
     if text in [
         "1K ~ 0.80$", "5K ~ 4.00$", "10K ~ 8.00$", "20K ~ 16.00$", 
         "30K ~ 24.00$", "40K ~ 32.00$", "50K ~ 40.00$", "60K ~ 48.00$", 
@@ -85,14 +82,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'package': f"FACEBOOK LIKE ({package_name})"
         }
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK LIKE ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        await update.message.reply_text(f"You selected: FACEBOOK LIKE ({package_name})\n\nPlease send your Facebook Link:", reply_markup=reply_markup)
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Views
     if text in [
         "1K ~ 0.53$", "5K ~ 2.65$", "10K ~ 5.30$", "20K ~ 10.60$", 
         "30K ~ 15.90$", "40K ~ 21.20$", "50K ~ 26.50$", "60K ~ 31.80$", 
@@ -104,29 +100,46 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'package': f"FACEBOOK VIEWS ({package_name})"
         }
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK VIEWS ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        await update.message.reply_text(f"You selected: FACEBOOK VIEWS ({package_name})\n\nPlease send your Facebook Link:", reply_markup=reply_markup)
         return
 
-    # ម៉ឺនុយមេ
-    if text == "🛍️ សេវាកម្ម":
+    if text == "🛍️ Services":
         keyboard = [
             ["📘 Facebook", "🎵 TikTok"],
-            ["🔙 ត្រឡប់ក្រោយ"]
+            ["🔙 Back"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("📌 សូមជ្រើសរើសប្រភេទ Platform ៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select a Platform:", reply_markup=reply_markup)
         
+    elif text == "🪪 Account":
+        user = update.effective_user
+        username = f"@{user.username}" if user.username else "No Username"
+        balance = user_balances.get(user_id, 0.00)
+        
+        account_info = (
+            "🪪 **Account Information**\n\n"
+            f"• Username: {username}\n"
+            f"• ID: {user.id}\n"
+            f"• Balance: ${balance:.2f}"
+        )
+        keyboard = [
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text(account_info, reply_markup=reply_markup, parse_mode="Markdown")
+
     elif text == "📘 Facebook":
         keyboard = [
             ["👥 Facebook Follow", "👍 Facebook Like"],
-            ["👁️ Facebook Views", "🔙 ត្រឡប់ក្រោយ"]
+            ["👁️ Facebook Views", "🔙 Back"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("📌 សូមជ្រើសរើសសេវាកម្ម Facebook ៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select Facebook service:", reply_markup=reply_markup)
         
     elif text == "👥 Facebook Follow":
         price_keyboard = [
@@ -134,10 +147,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ["10K ~ 7.00$", "15K ~ 10.50$"],
             ["20K ~ 14.00$", "30K ~ 21.00$"],
             ["40K ~ 28.00$", "50K ~ 35.00$"],
-            ["🔙 ត្រឡប់ក្រោយ"]
+            ["🔙 Back"]
         ]
         reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
-        await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK FOLLOW ៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select FACEBOOK FOLLOW package:", reply_markup=reply_markup)
 
     elif text == "👍 Facebook Like":
         price_keyboard = [
@@ -147,10 +160,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ["50K ~ 40.00$", "60K ~ 48.00$"],
             ["70K ~ 56.00$", "80K ~ 64.00$"],
             ["90K ~ 72.00$"],
-            ["🔙 ត្រឡប់ក្រោយ"]
+            ["🔙 Back"]
         ]
         reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
-        await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK LIKE ៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select FACEBOOK LIKE package:", reply_markup=reply_markup)
 
     elif text == "👁️ Facebook Views":
         price_keyboard = [
@@ -160,29 +173,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ["50K ~ 26.50$", "60K ~ 31.80$"],
             ["70K ~ 37.10$", "80K ~ 42.40$"],
             ["90K ~ 47.70$", "100K ~ 53.00$"],
-            ["🔙 ត្រឡប់ក្រោយ"]
+            ["🔙 Back"]
         ]
         reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
-        await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK VIEWS ៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select FACEBOOK VIEWS package:", reply_markup=reply_markup)
 
     elif text == "🎵 TikTok":
-        await update.message.reply_text("🛠️ សេវាកម្មនេះកំពុងរៀបចំឡើង សូមអភ័យទោសចំពោះភាពអាក់ខាន!")
+        await update.message.reply_text("TikTok service is coming soon!")
 
-    elif text == "🔙 ត្រឡប់ក្រោយ":
+    elif text == "🔙 Back":
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("សូមជ្រើសរើសជម្រើសខាងក្រោម៖", reply_markup=reply_markup)
+        await update.message.reply_text("Please select an option below:", reply_markup=reply_markup)
         
-    elif text == "ទំនាក់ទំនង (Contact)":
-        await update.message.reply_text("📞 ព័ត៌មានទំនាក់ទំនង:\n- Telegram Admin: @YourUsername")
+    elif text == "Contact":
+        await update.message.reply_text("Contact Admin: @YourUsername")
         
-    elif text == "ព័ត៌មាន (About)":
-        await update.message.reply_text("ℹ️ នេះគឺជាប្រព័ន្ធ Bot ស្វ័យប្រវត្តិសម្រាប់សេវាកម្ម Social Media។")
+    elif text == "About":
+        await update.message.reply_text("This is an automated SMM service bot.")
 
-# 3. កូដទទួលយករូបភាព Slip ពីអតិថិជន និងបាញ់ចូល Group ព្រមទាំងភ្ជាប់ User ID ក្នុងប៊ូតុង Admin
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
@@ -194,17 +206,17 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_file_id = update.message.photo[-1].file_id
         
         keyboard = [
-            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
-            ["ព័ត៌មាន (About)"]
+            ["🛍️ Services", "🪪 Account"],
+            ["Contact", "About"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         
-        await update.message.reply_text("✅ អរគុណ! ការកុម្ម៉ង់ និងវិក្កយបត្ររបស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។", reply_markup=reply_markup)
+        await update.message.reply_text("Thank you! Your order and payment slip have been sent to Admin.", reply_markup=reply_markup)
         
         admin_keyboard = [
             [
-                InlineKeyboardButton("✅ បញ្ជាក់", callback_data=f"approve_{user_id}"),
-                InlineKeyboardButton("❌ មិនយល់ព្រម", callback_data=f"reject_{user_id}")
+                InlineKeyboardButton("Approve", callback_data=f"approve_{user_id}"),
+                InlineKeyboardButton("Reject", callback_data=f"reject_{user_id}")
             ]
         ]
         admin_markup = InlineKeyboardMarkup(admin_keyboard)
@@ -212,10 +224,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         GROUP_CHAT_ID = "-1003950979639"
         user = update.effective_user
         caption = (
-            "🔔 **មានការបញ្ជាទិញថ្មី និងវិក្កយបត្របង់ប្រាក់!**\n\n"
-            f"• សេវាកម្ម: {package}\n"
-            f"• តំណរ (Link): {link}\n"
-            f"• អតិថិជន: {user.first_name} (@{user.username if user.username else 'គ្មាន'})\n"
+            "New Order & Payment Slip!\n\n"
+            f"• Service: {package}\n"
+            f"• Link: {link}\n"
+            f"• Customer: {user.first_name} (@{user.username if user.username else 'None'})\n"
             f"• User ID: {user.id}"
         )
         try:
@@ -231,9 +243,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         del user_states[user_id]
     else:
-        await update.message.reply_text("សូមជ្រើសរើសសេវាកម្មតាមរយៈមឺនុយជាមុនសិន។")
+        await update.message.reply_text("Please select a service from the menu first.")
 
-# 4. កូដពេល Admin ចុចប៊ូតុង ព្រមទាំងផ្ញើសារជូនដំណឹងទៅ User វិញស្វ័យប្រវត្តិ
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -245,26 +256,26 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target_user_id = int(target_user_id)
     
     if action == "approve":
-        new_caption = original_caption + "\n\n🟢 **ស្ថានភាព៖ បានបញ្ជាក់ (Approved) ✅**"
+        new_caption = original_caption + "\n\nStatus: Approved"
         await query.edit_message_caption(caption=new_caption, parse_mode="Markdown")
         
         try:
             await context.bot.send_message(
                 chat_id=target_user_id,
-                text="🎉 **ដំណឹងល្អ!** ការកុម្ម៉ង់សេវាកម្មរបស់អ្នកត្រូវបាន Admin **បញ្ជាក់ (Approved) ✅** រួចរាល់ហើយ! យើងកំពុងដំណើរការជូនលោកអ្នកឆាប់ៗនេះ។",
+                text="Your order has been Approved by Admin!",
                 parse_mode="Markdown"
             )
         except Exception as e:
             print(f"Error notifying user: {e}")
             
     elif action == "reject":
-        new_caption = original_caption + "\n\n🔴 **ស្ថានភាព៖ មិនយល់ព្រម / បដិសេធ (Rejected) ❌**"
+        new_caption = original_caption + "\n\nStatus: Rejected"
         await query.edit_message_caption(caption=new_caption, parse_mode="Markdown")
         
         try:
             await context.bot.send_message(
                 chat_id=target_user_id,
-                text="❌ **សូមអភ័យទោស!** ការកុម្ម៉ង់សេវាកម្មរបស់អ្នកត្រូវបាន Admin **មិនយល់ព្រម (Rejected) ❌** (អាចមកពីវិក្កយបត្រមិនត្រឹមត្រូវ)។ សូមទំនាក់ទំនងមកកាន់ Admin ផ្ទាល់។",
+                text="Your order has been Rejected by Admin.",
                 parse_mode="Markdown"
             )
         except Exception as e:
@@ -280,5 +291,5 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(CallbackQueryHandler(admin_callback))
     
-    print("Bot កំពុងដំណើរការ...")
+    print("Bot is running...")
     app.run_polling()
