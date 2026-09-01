@@ -23,7 +23,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("សូមជ្រើសរើសប្រភេទសេវាកម្មខាងក្រោម៖", reply_markup=reply_markup)
         
     elif text == "ទំនាក់ទំនង (Contact)":
-        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង @neakkrobkrong ។")
+        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង។")
         
     elif text == "ព័ត៌មាន (About)":
         await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
@@ -46,19 +46,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.edit_text("សេវាកម្ម TikTok កំពុងរៀបចំ...")
         
     elif query.data == "fb_follow":
-        price_text = (
-            "📌 **តារាងតម្លៃ FACEBOOK FOLLOW** 📌\n\n"
-            "• 1K = 0.69$\n"
-            "• 5K = 4.5$\n"
-            "• 10K = 8.60$\n\n"
-            "សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះដើម្បីកុម្ម៉ង់!"
-        )
-        await query.message.edit_text(price_text, parse_mode="Markdown")
+        # បង្កើត Button តម្លៃតម្រៀបចុះក្រោមស្អាតដូចក្នុងរូប
+        price_keyboard = [
+            [InlineKeyboardButton("1K ~ 0.69$", callback_data="buy_1k")],
+            [InlineKeyboardButton("5K ~ 4.5$", callback_data="buy_5k")],
+            [InlineKeyboardButton("10K ~ 8.60$", callback_data="buy_10k")]
+        ]
+        reply_markup = InlineKeyboardMarkup(price_keyboard)
+        await query.message.edit_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK FOLLOW ៖", reply_markup=reply_markup)
         
     elif query.data == "fb_like":
         await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK LIKE")
     elif query.data == "fb_views":
         await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK VIEWS")
+        
+    elif query.data in ["buy_1k", "buy_5k", "buy_10k"]:
+        package = query.data.replace("buy_", "").upper()
+        await query.message.edit_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ {package}។ សូមផ្ញើតំណរ (Link) មកទីនេះដើម្បីបន្ត!")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
