@@ -5,9 +5,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 user_states = {}
 user_balances = {}
 user_languages = {}
-admin_states = {}  # សម្រាប់តាមដានសកម្មភាព Admin ពេលផ្ញើសារផ្ទាល់
+admin_states = {}
 
-ADMIN_USERNAME = "@NEAKKROBKRONG"
+ADMIN_USERNAME = "NEAKKROBKRONG"  # មិនបាច់ដាក់សញ្ញា @ ទេ ដើម្បីងាយស្រួលឆែក
 
 PRICES = {
     "FACEBOOK FOLLOW (1K)": 0.70, "FACEBOOK FOLLOW (5K)": 3.50, "FACEBOOK FOLLOW (10K)": 7.00, "FACEBOOK FOLLOW (15K)": 10.50,
@@ -35,7 +35,7 @@ TEXTS = {
         "slip_prompt": "📸 សូមផ្ញើរូបភាពវិក្កយបត្រ (Slip) នៃការបង់ប្រាក់របស់អ្នកមកទីនេះ ដើម្បីឱ្យ Admin ពិនិត្យ!",
         "slip_success": "✅ អរគុណ! វិក្កយបត្រដាក់ប្រាក់ត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។",
         "account_info": "🪪 **ព័ត៌មានគណនីរបស់អ្នក**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
-        "contact_info": f"📞 ព័ត៌មានទំនាក់ទំនង Admin:\n- Telegram: {ADMIN_USERNAME}",
+        "contact_info": f"📞 ព័ត៌មានទំនាក់ទំនង Admin:\n- Telegram: @{ADMIN_USERNAME}",
         "about_info": "ℹ️ នេះគឺជាប្រព័ន្ធស្វ័យប្រវត្តិសម្រាប់បញ្ជាទិញសេវាកម្ម Social Media។",
         "lang_select": "🌐 សូមជ្រើសរើសភាសា៖", "lang_changed": "✅ បានប្តូរទៅជាភាសាខ្មែរជោគជ័យ!"
     },
@@ -51,7 +51,7 @@ TEXTS = {
         "slip_prompt": "📸 Please send your payment Slip here for Admin review!",
         "slip_success": "✅ Thank you! Your payment slip has been sent to Admin.",
         "account_info": "🪪 **Your Account Information**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
-        "contact_info": f"Contact Admin:\n- Telegram: {ADMIN_USERNAME}",
+        "contact_info": f"Contact Admin:\n- Telegram: @{ADMIN_USERNAME}",
         "about_info": "This is an automated bot for Social Media services.",
         "lang_select": "🌐 Please select language:", "lang_changed": "✅ Switched to English successfully!"
     }
@@ -73,26 +73,74 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_lang(user_id)
     await update.message.reply_text(TEXTS[lang]["welcome"], reply_markup=get_main_keyboard(lang))
 
+# មុខងារបញ្ជា /admin សម្រាប់ Admin ផ្ទាំងគ្រប់គ្រងទឹកប្រាក់
+async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if user.username and user.username.lower() == ADMIN_USERNAME.lower():
+        keyboard = [
+            [InlineKeyboardButton("➕ បន្ថែមលុយ (Add Balance)", callback_data="adm_add"),
+             InlineKeyboardButton("➖ ដកលុយ (Deduct Balance)", callback_data="adm_deduct")]
+        ]
+        await update.message.reply_text(
+            "🛠️ **Admin Control Panel**\n\nសូមជ្រើសរើសសកម្មភាព مدیریت Balance ៖",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text("❌ You are not authorized to use this command.")
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text
     lang = get_lang(user_id)
     t = TEXTS[lang]
     
-    # ពិនិត្យមើលថាតើ Admin កំពុងឆ្លើយតបសារផ្ទាល់ទៅកាន់ User ដែរឬទេ (ផ្អែកលើ Group Chat)
     GROUP_CHAT_ID = -1003950979639
+
+    # 1. ករណី Admin កំពុងវាយបញ្ចូល User ID និង Amount សម្រាប់ Add/Deduct លុយ
     if update.effective_chat.id == GROUP_CHAT_ID and user_id in admin_states:
+        state = admin_states[user_id]
+        try:
+            # ទម្រង់ដែល Admin ត្រូវវាយ: UserID Amount (ឧទាហរណ៍: 8904196183 10)
+            parts = text.split()
+            target_id = int(parts[0])
+            amount = float(parts[1])
+            
+            if target_id not in user_balances:
+                user_balances[target_id] = 0.00
+                
+            if state == 'adding':
+                user_balances[target_id] += amount
+                action_text = f"Added ${amount:.2f}"
+                msg_to_user = f"🎉 Admin has added **${amount:.2f}** to your balance!\n💰 New Balance: **${user_balances[target_id]:.2f}**"
+            elif state == 'deducting':
+                user_balances[target_id] = max(0.00, user_balances[target_id] - amount)
+                action_text = f"Deducted ${amount:.2f}"
+                msg_to_user = f"⚠️ Admin has deducted **${amount:.2f}** from your balance.\n💰 New Balance: **${user_balances[target_id]:.2f}**"
+            
+            await update.message.reply_text(f"✅ Successfully {action_text} for User ID: `{target_id}`\nNew Balance: `${user_balances[target_id]:.2f}`", parse_mode="Markdown")
+            
+            # ផ្ញើសារជូនដំណឹងទៅ User ផ្ទាល់
+            try:
+                await context.bot.send_message(chat_id=target_id, text=msg_to_user, parse_mode="Markdown")
+            except:
+                pass
+                
+        except Exception as e:
+            await update.message.reply_text(f"❌ ទម្រង់មិនถูกต้อง! សូមសរសេរជា: `UserID ទឹកប្រាក់` (ឧទាហរណ៍: `8904196183 10`)", parse_mode="Markdown")
+            return
+            
+        del admin_states[user_id]
+        return
+
+    # 2. ករណី Admin ឆ្លើយតបសារផ្ទាល់ (Send Message) ទៅកាន់ User
+    if update.effective_chat.id == GROUP_CHAT_ID and user_id in admin_states and isinstance(admin_states[user_id], int):
         target_user_id = admin_states[user_id]
         try:
-            await context.bot.send_message(
-                chat_id=target_user_id,
-                text=f"💬 **សារពី Admin:**\n\n{text}",
-                parse_mode="Markdown"
-            )
+            await context.bot.send_message(chat_id=target_user_id, text=f"💬 **សារពី Admin:**\n\n{text}", parse_mode="Markdown")
             await update.message.reply_text("✅ បានផ្ញើសារទៅកាន់អតិថិជនជោគជ័យ!")
         except Exception as e:
             await update.message.reply_text(f"❌ មិនអាចផ្ញើសារបានទេ: {e}")
-        
         del admin_states[user_id]
         return
 
@@ -114,13 +162,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"{t['success_order']}\n💰 Balance: **${user_balances[user_id]:.2f}**", reply_markup=get_main_keyboard(lang), parse_mode="Markdown")
         
         admin_keyboard = [
-            [
-                InlineKeyboardButton("Approve", callback_data=f"approve_{user_id}"),
-                InlineKeyboardButton("Reject", callback_data=f"reject_{user_id}")
-            ],
-            [
-                InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")
-            ]
+            [InlineKeyboardButton("Approve", callback_data=f"approve_{user_id}"), InlineKeyboardButton("Reject", callback_data=f"reject_{user_id}")],
+            [InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")]
         ]
         user = update.effective_user
         caption = f"🔔 **New Order!**\n\n• Service: {package}\n• Price: ${price:.2f}\n• Link: {link}\n• User: {user.first_name} (@{user.username or 'None'}) [ID: {user.id}]"
@@ -198,13 +241,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(t["slip_success"], reply_markup=get_main_keyboard(lang))
         
         admin_keyboard = [
-            [
-                InlineKeyboardButton("Approve Fund", callback_data=f"fundapprove_{user_id}_{amount}"),
-                InlineKeyboardButton("Reject", callback_data=f"fundreject_{user_id}")
-            ],
-            [
-                InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")
-            ]
+            [InlineKeyboardButton("Approve Fund", callback_data=f"fundapprove_{user_id}_{amount}"), InlineKeyboardButton("Reject", callback_data=f"fundreject_{user_id}")],
+            [InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")]
         ]
         user = update.effective_user
         caption = f"💸 **New Add Fund!**\n\n• Amount: ${amount:.2f}\n• User: {user.first_name} (@{user.username or 'None'}) [ID: {user.id}]"
@@ -229,15 +267,13 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if action == "approve":
             target_user_id = int(parts[1])
             await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Approved ✅", parse_mode="Markdown")
-            try: 
-                await context.bot.send_message(chat_id=target_user_id, text="Your order has been Approved! ✅")
+            try: await context.bot.send_message(chat_id=target_user_id, text="Your order has been Approved! ✅")
             except: pass
             
         elif action == "reject":
             target_user_id = int(parts[1])
             await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
-            try: 
-                await context.bot.send_message(chat_id=target_user_id, text="Your order has been Rejected. ❌")
+            try: await context.bot.send_message(chat_id=target_user_id, text="Your order has been Rejected. ❌")
             except: pass
             
         elif action == "fundapprove":
@@ -249,19 +285,13 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_balances[target_user_id] += amount
             
             await query.edit_message_caption(caption=query.message.caption + f"\n\nStatus: Approved ✅ (+${amount:.2f})", parse_mode="Markdown")
-            try: 
-                await context.bot.send_message(
-                    chat_id=target_user_id, 
-                    text=f"🎉 Admin approved your top-up of **${amount:.2f}**!\n💰 Balance: **${user_balances[target_user_id]:.2f}**", 
-                    parse_mode="Markdown"
-                )
+            try: await context.bot.send_message(chat_id=target_user_id, text=f"🎉 Admin approved your top-up of **${amount:.2f}**!\n💰 Balance: **${user_balances[target_user_id]:.2f}**", parse_mode="Markdown")
             except: pass
             
         elif action == "fundreject":
             target_user_id = int(parts[1])
             await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
-            try: 
-                await context.bot.send_message(chat_id=target_user_id, text="❌ Top-up request rejected.")
+            try: await context.bot.send_message(chat_id=target_user_id, text="❌ Top-up request rejected.")
             except: pass
 
         elif action == "msg":
@@ -276,9 +306,12 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
     app = ApplicationBuilder().token(TOKEN).build()
+    
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("admin", admin_command))  # បន្ថែម Handler សម្រាប់ /admin
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(CallbackQueryHandler(admin_callback))
+    
     print("Bot is running...")
     app.run_polling()
