@@ -58,21 +58,57 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃពីតារាងខាងក្រោម
+    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Follow
     if text in ["1K ~ 0.70$", "5K ~ 3.50$", "10K ~ 7.00$", "15K ~ 10.50$", "20K ~ 14.00$", "30K ~ 21.00$", "40K ~ 28.00$", "50K ~ 35.00$"]:
         package_name = text.split(" ~ ")[0]
-        
         user_states[user_id] = {
             'step': 'waiting_link',
             'package': f"FACEBOOK FOLLOW ({package_name})"
         }
-        
         keyboard = [
             ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
             ["ព័ត៌មាន (About)"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **{package_name}** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK FOLLOW ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        return
+
+    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Like
+    if text in [
+        "1K ~ 0.80$", "5K ~ 4.00$", "10K ~ 8.00$", "20K ~ 16.00$", 
+        "30K ~ 24.00$", "40K ~ 32.00$", "50K ~ 40.00$", "60K ~ 48.00$", 
+        "70K ~ 56.00$", "80K ~ 64.00$", "90K ~ 72.00$"
+    ]:
+        package_name = text.split(" ~ ")[0]
+        user_states[user_id] = {
+            'step': 'waiting_link',
+            'package': f"FACEBOOK LIKE ({package_name})"
+        }
+        keyboard = [
+            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
+            ["ព័ត៌មាន (About)"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK LIKE ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
+        return
+
+    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Views
+    if text in [
+        "1K ~ 0.53$", "5K ~ 2.65$", "10K ~ 5.30$", "20K ~ 10.60$", 
+        "30K ~ 15.90$", "40K ~ 21.20$", "50K ~ 26.50$", "60K ~ 31.80$", 
+        "70K ~ 37.10$", "80K ~ 42.40$", "90K ~ 47.70$", "100K ~ 53.00$"
+    ]:
+        package_name = text.split(" ~ ")[0]
+        user_states[user_id] = {
+            'step': 'waiting_link',
+            'package': f"FACEBOOK VIEWS ({package_name})"
+        }
+        keyboard = [
+            ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
+            ["ព័ត៌មាន (About)"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **FACEBOOK VIEWS ({package_name})** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:", reply_markup=reply_markup)
         return
 
     # ម៉ឺនុយមេ
@@ -103,7 +139,33 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
         await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK FOLLOW ៖", reply_markup=reply_markup)
 
-    elif text in ["👍 Facebook Like", "👁️ Facebook Views", "🎵 TikTok"]:
+    elif text == "👍 Facebook Like":
+        price_keyboard = [
+            ["1K ~ 0.80$", "5K ~ 4.00$"],
+            ["10K ~ 8.00$", "20K ~ 16.00$"],
+            ["30K ~ 24.00$", "40K ~ 32.00$"],
+            ["50K ~ 40.00$", "60K ~ 48.00$"],
+            ["70K ~ 56.00$", "80K ~ 64.00$"],
+            ["90K ~ 72.00$"],
+            ["🔙 ត្រឡប់ក្រោយ"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
+        await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK LIKE ៖", reply_markup=reply_markup)
+
+    elif text == "👁️ Facebook Views":
+        price_keyboard = [
+            ["1K ~ 0.53$", "5K ~ 2.65$"],
+            ["10K ~ 5.30$", "20K ~ 10.60$"],
+            ["30K ~ 15.90$", "40K ~ 21.20$"],
+            ["50K ~ 26.50$", "60K ~ 31.80$"],
+            ["70K ~ 37.10$", "80K ~ 42.40$"],
+            ["90K ~ 47.70$", "100K ~ 53.00$"],
+            ["🔙 ត្រឡប់ក្រោយ"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(price_keyboard, resize_keyboard=True)
+        await update.message.reply_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK VIEWS ៖", reply_markup=reply_markup)
+
+    elif text == "🎵 TikTok":
         await update.message.reply_text("🛠️ សេវាកម្មនេះកំពុងរៀបចំឡើង សូមអភ័យទោសចំពោះភាពអាក់ខាន!")
 
     elif text == "🔙 ត្រឡប់ក្រោយ":
