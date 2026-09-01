@@ -46,7 +46,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.edit_text("សេវាកម្ម TikTok កំពុងរៀបចំ...")
         
     elif query.data == "fb_follow":
-        # បង្កើត Button តម្លៃតម្រៀបចុះក្រោមស្អាតដូចក្នុងរូប
         price_keyboard = [
             [InlineKeyboardButton("1K ~ 0.69$", callback_data="buy_1k")],
             [InlineKeyboardButton("5K ~ 4.5$", callback_data="buy_5k")],
@@ -62,7 +61,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     elif query.data in ["buy_1k", "buy_5k", "buy_10k"]:
         package = query.data.replace("buy_", "").upper()
+        
+        # 1. ឆ្លើយតបទៅអតិថិជនផ្ទាល់
         await query.message.edit_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ {package}។ សូមផ្ញើតំណរ (Link) មកទីនេះដើម្បីបន្ត!")
+        
+        # 2. ផ្ញើសារជូនដំណឹងចូលក្នុង Group "ORDER" ដោយស្វ័យប្រវត្តិ
+        GROUP_CHAT_ID = "-1003950979639"
+        user = query.from_user
+        notification_text = (
+            "🔔 **មានការបញ្ជាទិញថ្មី!**\n\n"
+            f"• សេវាកម្ម: FACEBOOK FOLLOW ({package})\n"
+            f"• អតិថិជន: {user.first_name} (@{user.username if user.username else 'គ្មាន'})\n"
+            f"• User ID: {user.id}"
+        )
+        try:
+            await context.bot.send_message(chat_id=GROUP_CHAT_ID, text=notification_text, parse_mode="Markdown")
+        except Exception as e:
+            print(f"Error sending notification: {e}")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
