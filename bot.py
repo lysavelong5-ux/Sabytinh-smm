@@ -1,10 +1,9 @@
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-# Dictionary សម្រាប់រក្សាទុកកញ្ចប់ដែលអតិថិជនបានជ្រើសរើសបណ្តោះអាសន្ន
-user_selected_package = {}
+# Dictionary សម្រាប់រក្សាទុកស្ថានភាពនិងទិន្នន័យអតិថិជន
+user_states = {}
 
-# កូដពេលចាប់ផ្តើម /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
@@ -13,39 +12,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text("សួស្តី! សូមជ្រើសរើសជម្រើសខាងក្រោម៖", reply_markup=reply_markup)
 
-# កូដពេលអ្នកប្រើប្រាស់ចុច Menu នៅខាងក្រោម
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
     user_id = update.effective_user.id
+    text = update.message.text
     
-    # ពិនិត្យមើលថាតើអតិថិជនកំពុងស្ថិតក្នុងដំណាក់កាលផ្ញើ Link ឬអត់
-    if user_id in user_selected_package:
-        package = user_selected_package[user_id]
-        link = text
+    # ពិនិត្យមើលថាតើអតិថិជនកំពុងស្ថិតក្នុងដំណាក់កាលរង់ចាំ Link ដែរឬទេ
+    if user_id in user_states:
+        state = user_states[user_id]
         
-        # 1. ឆ្លើយតបប្រាប់អតិថិជនថារួចរាល់
-        await update.message.reply_text("✅ អរគុណ! ការកុម្ម៉ង់របស់អ្នកត្រូវបានបញ្ជូនទៅកាន់ Admin រួចរាល់ហើយ។ សូមរង់ចាំបន្តិច!")
-        
-        # 2. ផ្ញើព័ត៌មានលម្អិត (កញ្ចប់ + Link + ព័ត៌មានអតិថិជន) ចូលទៅក្នុង Group ORDER
-        GROUP_CHAT_ID = "-1003950979639"
-        user = update.effective_user
-        notification_text = (
-            "🔔 **មានការបញ្ជាទិញថ្មី!**\n\n"
-            f"• សេវាកម្ម: FACEBOOK FOLLOW ({package})\n"
-            f"• តំណរ (Link): {link}\n"
-            f"• អតិថិជន: {user.first_name} (@{user.username if user.username else 'គ្មាន'})\n"
-            f"• User ID: {user.id}"
-        )
-        try:
-            await context.bot.send_message(chat_id=GROUP_CHAT_ID, text=notification_text, parse_mode="Markdown")
-        except Exception as e:
-            print(f"Error sending notification: {e}")
+        if state.get('step') == 'waiting_link':
+            # ទទួលបាន Link ហើយ រួចប្តូរទៅដំណាក់កាលរង់ចាំ Slip
+            state['link'] = text
+            state['step'] = 'waiting_slip'
             
-        # លុប State ចេញវិញក្រោយពេលបញ្ជូនរួច
-        del user_selected_package[user_id]
-        return
+            # ផ្ញើសារជូន QR Code សម្រាប់ការទូទាត់ប្រាក់
+            await update.message.reply_text(
+                "🔗 បានទទួល Link រួចរាល់!\n\n"
+                "💳 សូមធ្វើការស្កេន QR Code ដើម្បីទូទាត់ប្រាក់:\n"
+                "(សូមដាក់រូបភាព QR របស់អ្នក ឬតំណរទូទាត់នៅទីនេះ)\n\n"
+                "📸 បន្ទាប់ពីបង់ប្រាក់រួច សូម **ផ្ញើរូបភាពវិក្កយបត្រ (Slip)** មកកាន់ឆាតនេះដើម្បីបញ្ជាក់!"
+            )
+            return
 
-    #  xử lý เมนู ปกติ
+    # ម៉ឺនុយទូទៅ
     if text == "🛍️ សេវាកម្ម":
         inline_keyboard = [
             [InlineKeyboardButton("Facebook", callback_data="menu_facebook")],
@@ -60,7 +49,41 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "ព័ត៌មាន (About)":
         await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
 
-# កូដពេលអ្នកប្រើប្រាស់ចុចលើប៊ូតុង Inline
+# កូដសម្រាប់ទទួលយករូបភាពវិក្កយបត្រ (Slip) ពីអតិថិជន
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    
+    if user_id in user_states and user_states[user_id].get('step') == 'waiting_slip':
+        state = user_states[user_id]
+        package = state.get('package')
+        link = state.get('link')
+        
+        # យក File ID ជារូបភាព Slip ដែលអតិថិជនផ្ញើមក
+        photo_file_id = update.message.photo[-1].file_id
+        
+        # 1. ឆ្លើយតបប្រាប់អតិថិជន
+        await update.message.reply_text("✅ អរគុណ! ការកុម្ម៉ង់ និងវិក្កយបត្ររបស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ សូមរង់ចាំដំណើរការបន្ត។")
+        
+        # 2. ផ្ញើរូបភាព Slip និងព័ត៌មានចូលទៅក្នុង Group ORDER (-1003950979639)
+        GROUP_CHAT_ID = "-1003950979639"
+        user = update.effective_user
+        caption = (
+            "🔔 **មានការបញ្ជាទិញថ្មី និងវិក្កយបត្របង់ប្រាក់!**\n\n"
+            f"• សេវាកម្ម: {package}\n"
+            f"• តំណរ (Link): {link}\n"
+            f"• អតិថិជន: {user.first_name} (@{user.username if user.username else 'គ្មាន'})\n"
+            f"• User ID: {user.id}"
+        )
+        try:
+            await context.bot.send_photo(chat_id=GROUP_CHAT_ID, photo=photo_file_id, caption=caption, parse_mode="Markdown")
+        except Exception as e:
+            print(f"Error sending photo notification: {e}")
+            
+        # លុប State ចេញវិញក្រោយបញ្ជូនរួច
+        del user_states[user_id]
+    else:
+        await update.message.reply_text("សូមជ្រើសរើសសេវាកម្មតាមរយៈមឺនុយជាមុនសិន។")
+
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -93,13 +116,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK VIEWS")
         
     elif query.data in ["buy_1k", "buy_5k", "buy_10k"]:
-        package = query.data.replace("buy_", "").upper()
+        package_name = query.data.replace("buy_", "").upper()
         
-        # កត់ត្រាទុកថាសមាជិកនេះបានជ្រើសរើសកញ្ចប់ណា
-        user_selected_package[user_id] = f"FACEBOOK FOLLOW ({package})"
+        # កត់ត្រាទុកថាសមាជិកនេះរង់ចាំផ្ញើ Link
+        user_states[user_id] = {
+            'step': 'waiting_link',
+            'package': f"FACEBOOK FOLLOW ({package_name})"
+        }
         
-        # ឱ្យអតិថិជនផ្ញើ Link ចូលមក
-        await query.message.edit_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **{package}** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះឥឡូវនេះ!")
+        await query.message.edit_text(f"អ្នកបានជ្រើសរើសកញ្ចប់ **{package_name}** ហើយ។\n\n🔗 សូមផ្ញើតំណរ (Link) ហ្វេសប៊ុករបស់អ្នកមកទីនេះ:")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
@@ -108,6 +133,7 @@ if __name__ == "__main__":
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(CallbackQueryHandler(button_callback))
     
     print("Bot កំពុងដំណើរការ...")
