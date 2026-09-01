@@ -1,7 +1,6 @@
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
-# Dictionary សម្រាប់រក្សាទុកស្ថានភាពនិងទិន្នន័យអតិថិជន
 user_states = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -16,25 +15,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text
     
-    # ពិនិត្យមើលថាតើអតិថិជនកំពុងស្ថិតក្នុងដំណាក់កាលរង់ចាំ Link ដែរឬទេ
     if user_id in user_states:
         state = user_states[user_id]
         
         if state.get('step') == 'waiting_link':
-            # ទទួលបាន Link ហើយ រួចប្តូរទៅដំណាក់កាលរង់ចាំ Slip
             state['link'] = text
             state['step'] = 'waiting_slip'
             
-            # ផ្ញើសារជូន QR Code សម្រាប់ការទូទាត់ប្រាក់
-            await update.message.reply_text(
+            # ផ្ញើរូបភាព QR Code (qr.jpg) ទៅឱ្យអតិថិជនស្វ័យប្រវត្តិ
+            caption = (
                 "🔗 បានទទួល Link រួចរាល់!\n\n"
-                "💳 សូមធ្វើការស្កេន QR Code ដើម្បីទូទាត់ប្រាក់:\n"
-                "(សូមដាក់រូបភាព QR របស់អ្នក ឬតំណរទូទាត់នៅទីនេះ)\n\n"
+                "💳 សូមធ្វើការស្កេន QR Code ខាងលើដើម្បីទូទាត់ប្រាក់ ៖\n\n"
                 "📸 បន្ទាប់ពីបង់ប្រាក់រួច សូម **ផ្ញើរូបភាពវិក្កយបត្រ (Slip)** មកកាន់ឆាតនេះដើម្បីបញ្ជាក់!"
             )
+            try:
+                with open("qr.jpg", "rb") as qr_photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=qr_photo,
+                        caption=caption,
+                        parse_mode="Markdown"
+                    )
+            except Exception as e:
+                await update.message.reply_text("🔗 បានទទួល Link រួចរាល់! សូមផ្ញើ Slip មកដើម្បីបន្ត។ (កត់សម្គាល់: រកមិនឃើញឯកសារ qr.jpg នៅលើ Server)")
+                print(f"Error opening qr.jpg: {e}")
             return
 
-    # ម៉ឺនុយទូទៅ
     if text == "🛍️ សេវាកម្ម":
         inline_keyboard = [
             [InlineKeyboardButton("Facebook", callback_data="menu_facebook")],
@@ -49,7 +55,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "ព័ត៌មាន (About)":
         await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
 
-# កូដសម្រាប់ទទួលយករូបភាពវិក្កយបត្រ (Slip) ពីអតិថិជន
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
@@ -58,13 +63,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         package = state.get('package')
         link = state.get('link')
         
-        # យក File ID ជារូបភាព Slip ដែលអតិថិជនផ្ញើមក
         photo_file_id = update.message.photo[-1].file_id
         
-        # 1. ឆ្លើយតបប្រាប់អតិថិជន
         await update.message.reply_text("✅ អរគុណ! ការកុម្ម៉ង់ និងវិក្កយបត្ររបស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ សូមរង់ចាំដំណើរការបន្ត។")
         
-        # 2. ផ្ញើរូបភាព Slip និងព័ត៌មានចូលទៅក្នុង Group ORDER (-1003950979639)
         GROUP_CHAT_ID = "-1003950979639"
         user = update.effective_user
         caption = (
@@ -79,7 +81,6 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             print(f"Error sending photo notification: {e}")
             
-        # លុប State ចេញវិញក្រោយបញ្ជូនរួច
         del user_states[user_id]
     else:
         await update.message.reply_text("សូមជ្រើសរើសសេវាកម្មតាមរយៈមឺនុយជាមុនសិន។")
@@ -118,7 +119,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data in ["buy_1k", "buy_5k", "buy_10k"]:
         package_name = query.data.replace("buy_", "").upper()
         
-        # កត់ត្រាទុកថាសមាជិកនេះរង់ចាំផ្ញើ Link
         user_states[user_id] = {
             'step': 'waiting_link',
             'package': f"FACEBOOK FOLLOW ({package_name})"
