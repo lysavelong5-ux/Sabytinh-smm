@@ -4,14 +4,16 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 
 user_states = {}
 user_balances = {}
-user_languages = {}  # សម្រាប់រក្សាទុកភាសាដែលអតិថិជនបានជ្រើសរើស (khmer ឬ english)
+user_languages = {}
 
-# អត្ថបទសម្រាប់បង្ហាញតាមភាសាផ្សេងៗ
+ADMIN_USERNAME = "@NEAKKROBKRONG"
+
 TEXTS = {
     "khmer": {
         "welcome": "🙏 សួស្តីស្វាគមន៍មកកាន់ប្រព័ន្ធសេវាកម្ម Social Media របស់យើង!\n\n👇 សូមជ្រើសរើសជម្រើសខាងក្រោម៖",
         "services": "🛍️ សេវាកម្ម",
         "account": "🪪 គណនី",
+        "add_fund": "💸 Add Fund",
         "lang": "🌐 ភាសា",
         "contact": "📞 ទំនាក់ទំនង",
         "about": "ℹ️ ព័ត៌មាន",
@@ -22,7 +24,8 @@ TEXTS = {
         "qr_prompt": "💳 សូមធ្វើការស្កេន QR Code ខាងលើដើម្បីទូទាត់ប្រាក់ ៖\n\n📸 បន្ទាប់ពីបង់ប្រាក់រួច សូម **ផ្ញើរូបភាពវិក្កយបត្រ (Slip)** មកកាន់ឆាតនេះដើម្បីបញ្ជាក់!",
         "success_slip": "✅ អរគុណ! ការកុម្ម៉ង់ និងវិក្កយបត្ររបស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។",
         "account_info": "🪪 **ព័ត៌មានគណនីរបស់អ្នក**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
-        "contact_info": "📞 ព័ត៌មានទំនាក់ទំនង Admin:\n- Telegram: @YourUsername",
+        "add_fund_info": f"💸 **បន្ថែមទឹកប្រាក់ (Add Fund)**\n\nដើម្បីបន្ថែមទឹកប្រាក់ចូលក្នុងគណនីរបស់អ្នក សូមធ្វើការទូទាត់ប្រាក់រួចផ្ញើ Slip មកកាន់ Admin ផ្ទាល់៖\n👉 Telegram: {ADMIN_USERNAME}",
+        "contact_info": f"📞 ព័ត៌មានទំនាក់ទំនង Admin:\n- Telegram: {ADMIN_USERNAME}",
         "about_info": "ℹ️ នេះគឺជាប្រព័ន្ធស្វ័យប្រវត្តិសម្រាប់បញ្ជាទិញសេវាកម្ម Social Media ក្នុងតម្លៃសមរម្យ។",
         "lang_select": "🌐 សូមជ្រើសរើសភាសាដែលលោកអ្នកចង់ប្រើប្រាស់៖"
     },
@@ -30,6 +33,7 @@ TEXTS = {
         "welcome": "👋 Welcome to our Social Media service system!\n\n👇 Please select an option below:",
         "services": "🛍️ Services",
         "account": "🪪 Account",
+        "add_fund": "💸 Add Fund",
         "lang": "🌐 Language",
         "contact": "📞 Contact",
         "about": "ℹ️ About",
@@ -40,21 +44,22 @@ TEXTS = {
         "qr_prompt": "💳 Please scan the QR Code above to make payment:\n\n📸 After payment, please send your payment Slip here!",
         "success_slip": "✅ Thank you! Your order and payment slip have been sent to Admin.",
         "account_info": "🪪 **Your Account Information**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
-        "contact_info": "📞 Contact Admin:\n- Telegram: @YourUsername",
+        "add_fund_info": f"💸 **Add Fund**\n\nTo top up your account balance, please make a payment and send your slip directly to Admin:\n👉 Telegram: {ADMIN_USERNAME}",
+        "contact_info": f"📞 Contact Admin:\n- Telegram: {ADMIN_USERNAME}",
         "about_info": "ℹ️ This is an automated bot for Social Media services.",
         "lang_select": "🌐 Please select your preferred language:"
     }
 }
 
 def get_lang(user_id):
-    return user_languages.get(user_id, "khmer")  # កំណត់ភាសាខ្មែរជាលំនាំដើម
+    return user_languages.get(user_id, "khmer")
 
 def get_main_keyboard(lang):
     t = TEXTS[lang]
     return ReplyKeyboardMarkup([
         [t["services"], t["account"]],
-        [t["lang"], t["contact"]],
-        [t["about"]]
+        [t["add_fund"], t["lang"]],
+        [t["contact"], t["about"]]
     ], resize_keyboard=True)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -71,7 +76,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in user_balances:
         user_balances[user_id] = 0.00
 
-    # ដំណាក់កាលរង់ចាំ Link
     if user_id in user_states and user_states[user_id].get('step') == 'waiting_link':
         state = user_states[user_id]
         state['link'] = text
@@ -94,7 +98,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(caption, reply_markup=get_main_keyboard(lang))
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ
     if text in ["1K ~ 0.70$", "5K ~ 3.50$", "10K ~ 7.00$", "15K ~ 10.50$", "20K ~ 14.00$", "30K ~ 21.00$", "40K ~ 28.00$", "50K ~ 35.00$"]:
         package_name = text.split(" ~ ")[0]
         user_states[user_id] = {'step': 'waiting_link', 'package': f"FACEBOOK FOLLOW ({package_name})"}
@@ -113,7 +116,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Selected: FACEBOOK VIEWS ({package_name})\n\n{t['link_prompt']}", reply_markup=get_main_keyboard(lang))
         return
 
-    # ការរុករកម៉ឺនុយ
     if text == t["services"]:
         keyboard = [
             ["📘 Facebook", "🎵 TikTok"],
@@ -127,6 +129,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         balance = user_balances.get(user_id, 0.00)
         account_msg = t["account_info"].format(username=username, user_id=user.id, balance=balance)
         await update.message.reply_text(account_msg, reply_markup=get_main_keyboard(lang), parse_mode="Markdown")
+
+    elif text == t["add_fund"]:
+        await update.message.reply_text(t["add_fund_info"], reply_markup=get_main_keyboard(lang), parse_mode="Markdown")
 
     elif text == t["lang"]:
         lang_keyboard = [
@@ -191,7 +196,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(t["welcome"], reply_markup=get_main_keyboard(lang))
         
     elif text == t["contact"]:
-        await update.message.reply_text(t["contact_info"])
+        await update.message.reply_text(t["contact_info"], parse_mode="Markdown")
         
     elif text == t["about"]:
         await update.message.reply_text(t["about_info"])
