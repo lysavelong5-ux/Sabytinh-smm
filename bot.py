@@ -5,6 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 user_states = {}
 user_balances = {}
 user_languages = {}
+admin_states = {}  # សម្រាប់តាមដានសកម្មភាព Admin ពេលផ្ញើសារផ្ទាល់
 
 ADMIN_USERNAME = "@NEAKKROBKRONG"
 
@@ -78,6 +79,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_lang(user_id)
     t = TEXTS[lang]
     
+    # ពិនិត្យមើលថាតើ Admin កំពុងឆ្លើយតបសារផ្ទាល់ទៅកាន់ User ដែរឬទេ (ផ្អែកលើ Group Chat)
+    GROUP_CHAT_ID = -1003950979639
+    if update.effective_chat.id == GROUP_CHAT_ID and user_id in admin_states:
+        target_user_id = admin_states[user_id]
+        try:
+            await context.bot.send_message(
+                chat_id=target_user_id,
+                text=f"💬 **សារពី Admin:**\n\n{text}",
+                parse_mode="Markdown"
+            )
+            await update.message.reply_text("✅ បានផ្ញើសារទៅកាន់អតិថិជនជោគជ័យ!")
+        except Exception as e:
+            await update.message.reply_text(f"❌ មិនអាចផ្ញើសារបានទេ: {e}")
+        
+        del admin_states[user_id]
+        return
+
     if user_id not in user_balances:
         user_balances[user_id] = 0.00
 
@@ -95,12 +113,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_balances[user_id] -= price
         await update.message.reply_text(f"{t['success_order']}\n💰 Balance: **${user_balances[user_id]:.2f}**", reply_markup=get_main_keyboard(lang), parse_mode="Markdown")
         
-        admin_keyboard = [[InlineKeyboardButton("Approve", callback_data=f"approve_{user_id}"), InlineKeyboardButton("Reject", callback_data=f"reject_{user_id}")]]
+        admin_keyboard = [
+            [
+                InlineKeyboardButton("Approve", callback_data=f"approve_{user_id}"),
+                InlineKeyboardButton("Reject", callback_data=f"reject_{user_id}")
+            ],
+            [
+                InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")
+            ]
+        ]
         user = update.effective_user
         caption = f"🔔 **New Order!**\n\n• Service: {package}\n• Price: ${price:.2f}\n• Link: {link}\n• User: {user.first_name} (@{user.username or 'None'}) [ID: {user.id}]"
         
         try:
-            await context.bot.send_message(chat_id="-1003950979639", text=caption, reply_markup=InlineKeyboardMarkup(admin_keyboard), parse_mode="Markdown")
+            await context.bot.send_message(chat_id=GROUP_CHAT_ID, text=caption, reply_markup=InlineKeyboardMarkup(admin_keyboard), parse_mode="Markdown")
         except Exception as e:
             print(f"Error: {e}")
         del user_states[user_id]
@@ -171,7 +197,15 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount = user_states[user_id].get('amount')
         await update.message.reply_text(t["slip_success"], reply_markup=get_main_keyboard(lang))
         
-        admin_keyboard = [[InlineKeyboardButton("Approve Fund", callback_data=f"fundapprove_{user_id}_{amount}"), InlineKeyboardButton("Reject", callback_data=f"fundreject_{user_id}")]]
+        admin_keyboard = [
+            [
+                InlineKeyboardButton("Approve Fund", callback_data=f"fundapprove_{user_id}_{amount}"),
+                InlineKeyboardButton("Reject", callback_data=f"fundreject_{user_id}")
+            ],
+            [
+                InlineKeyboardButton("💬 ផ្ញើសារផ្ទាល់", callback_data=f"msg_{user_id}")
+            ]
+        ]
         user = update.effective_user
         caption = f"💸 **New Add Fund!**\n\n• Amount: ${amount:.2f}\n• User: {user.first_name} (@{user.username or 'None'}) [ID: {user.id}]"
         
@@ -187,7 +221,6 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
-    original_caption = query.message.caption or ""
     
     try:
         parts = data.split("_")
@@ -195,14 +228,14 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if action == "approve":
             target_user_id = int(parts[1])
-            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Approved ✅", parse_mode="Markdown")
+            await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Approved ✅", parse_mode="Markdown")
             try: 
                 await context.bot.send_message(chat_id=target_user_id, text="Your order has been Approved! ✅")
             except: pass
             
         elif action == "reject":
             target_user_id = int(parts[1])
-            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
+            await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
             try: 
                 await context.bot.send_message(chat_id=target_user_id, text="Your order has been Rejected. ❌")
             except: pass
@@ -215,7 +248,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_balances[target_user_id] = 0.00
             user_balances[target_user_id] += amount
             
-            await query.edit_message_caption(caption=original_caption + f"\n\nStatus: Approved ✅ (+${amount:.2f})", parse_mode="Markdown")
+            await query.edit_message_caption(caption=query.message.caption + f"\n\nStatus: Approved ✅ (+${amount:.2f})", parse_mode="Markdown")
             try: 
                 await context.bot.send_message(
                     chat_id=target_user_id, 
@@ -226,10 +259,16 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         elif action == "fundreject":
             target_user_id = int(parts[1])
-            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
+            await query.edit_message_caption(caption=query.message.caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
             try: 
                 await context.bot.send_message(chat_id=target_user_id, text="❌ Top-up request rejected.")
             except: pass
+
+        elif action == "msg":
+            target_user_id = int(parts[1])
+            admin_id = update.effective_user.id
+            admin_states[admin_id] = target_user_id
+            await query.message.reply_text("✍️ សូមវាយបញ្ចូលសារដែលលោកអ្នកចង់ផ្ញើទៅកាន់អតិថិជននេះផ្ទាល់៖")
             
     except Exception as e:
         print(f"Error in admin_callback: {e}")
