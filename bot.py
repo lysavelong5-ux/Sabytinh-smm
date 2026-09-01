@@ -8,6 +8,20 @@ user_languages = {}
 
 ADMIN_USERNAME = "@NEAKKROBKRONG"
 
+# តារាងតម្លៃសេវាកម្ម (Price List)
+PRICES = {
+    "FACEBOOK FOLLOW (1K)": 0.70, "FACEBOOK FOLLOW (5K)": 3.50, "FACEBOOK FOLLOW (10K)": 7.00, "FACEBOOK FOLLOW (15K)": 10.50,
+    "FACEBOOK FOLLOW (20K)": 14.00, "FACEBOOK FOLLOW (30K)": 21.00, "FACEBOOK FOLLOW (40K)": 28.00, "FACEBOOK FOLLOW (50K)": 35.00,
+    
+    "FACEBOOK LIKE (1K)": 0.80, "FACEBOOK LIKE (5K)": 4.00, "FACEBOOK LIKE (10K)": 8.00, "FACEBOOK LIKE (20K)": 16.00,
+    "FACEBOOK LIKE (30K)": 24.00, "FACEBOOK LIKE (40K)": 32.00, "FACEBOOK LIKE (50K)": 40.00, "FACEBOOK LIKE (60K)": 48.00,
+    "FACEBOOK LIKE (70K)": 56.00, "FACEBOOK LIKE (80K)": 64.00, "FACEBOOK LIKE (90K)": 72.00,
+    
+    "FACEBOOK VIEWS (1K)": 0.53, "FACEBOOK VIEWS (5K)": 2.65, "FACEBOOK VIEWS (10K)": 5.30, "FACEBOOK VIEWS (20K)": 10.60,
+    "FACEBOOK VIEWS (30K)": 15.90, "FACEBOOK VIEWS (40K)": 21.20, "FACEBOOK VIEWS (50K)": 26.50, "FACEBOOK VIEWS (60K)": 31.80,
+    "FACEBOOK VIEWS (70K)": 37.10, "FACEBOOK VIEWS (80K)": 42.40, "FACEBOOK VIEWS (90K)": 47.70, "FACEBOOK VIEWS (100K)": 53.00
+}
+
 TEXTS = {
     "khmer": {
         "welcome": "🙏 សួស្តីស្វាគមន៍មកកាន់ប្រព័ន្ធសេវាកម្ម Social Media របស់យើង!\n\n👇 សូមជ្រើសរើសជម្រើសខាងក្រោម៖",
@@ -20,13 +34,18 @@ TEXTS = {
         "back": "🔙 ត្រឡប់ក្រោយ",
         "platform_select": "📌 សូមជ្រើសរើសប្រភេទ Platform ៖",
         "fb_select": "📌 សូមជ្រើសរើសសេវាកម្ម Facebook ៖",
-        "link_prompt": "🔗 បានទទួលតំណរ (Link) រួចរាល់!\n\n✅ ឥឡូវនេះការកុម្ម៉ង់របស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។ សូមរង់ចាំការពិនិត្យបន្តិច!",
+        "link_prompt": "🔗 បានជ្រើសរើសកញ្ចប់: **{package}** (តម្លៃ: **${price:.2f}**)\n\n🔗 សូមផ្ញើតំណរ (Link) របស់អ្នកមកទីនេះ៖",
+        "insufficient_balance": "❌ **ទឹកប្រាក់ក្នុងគណនីរបស់អ្នកមិនគ្រប់គ្រាន់ទេ!**\n\n• តម្លៃសេវាកម្ម: **${price:.2f}**\n• Balance របស់អ្នក: **${balance:.2f}**\n\n👇 សូមចុចប៊ូតុង **💸 Add Fund** ដើម្បីបន្ថែមទឹកប្រាក់ជាមុនសិន!",
+        "success_order": "✅ អរគុណ! ការកុម្ម៉ង់របស់អ្នកត្រូវបានកាត់លុយ និងបញ្ជូនជូន Admin រួចរាល់ហើយ។",
         "add_fund_prompt": "💸 **បន្ថែមទឹកប្រាក់ (Add Fund)**\n\nសូមវាយបញ្ចូលចំនួនទឹកប្រាក់ដែលអ្នកចង់បន្ថែម (ឧទាហរណ៍: `10` ឬ `5.5` ជាលុយដុល្លារ):",
         "slip_prompt": "📸 សូមផ្ញើរូបភាពវិក្កយបត្រ (Slip) នៃការបង់ប្រាក់របស់អ្នកមកទីនេះ ដើម្បីឱ្យ Admin ពិនិត្យ និងបញ្ជាក់!",
+        "slip_success": "✅ អរគុណ! វិក្កយបត្រដាក់ប្រាក់របស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។ សូមរង់ចាំការផ្ទៀងផ្ទាត់!",
         "account_info": "🪪 **ព័ត៌មានគណនីរបស់អ្នក**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
         "contact_info": f"📞 ព័ត៌មានទំនាក់ទំនង Admin:\n- Telegram: {ADMIN_USERNAME}",
         "about_info": "ℹ️ នេះគឺជាប្រព័ន្ធស្វ័យប្រវត្តិសម្រាប់បញ្ជាទិញសេវាកម្ម Social Media ក្នុងតម្លៃសមរម្យ។",
-        "lang_select": "🌐 សូមជ្រើសរើសភាសាដែលលោកអ្នកចង់ប្រើប្រាស់៖"
+        "lang_select": "🌐 សូមជ្រើសរើសភាសាដែលលោកអ្នកចង់ប្រើប្រាស់៖",
+        "lang_changed": "✅ បានប្តូរទៅជាភាសាខ្មែរជោគជ័យ!",
+        "select_service_first": "សូមជ្រើសរើសមុខងារ Add Fund ជាមុនសិន។"
     },
     "english": {
         "welcome": "👋 Welcome to our Social Media service system!\n\n👇 Please select an option below:",
@@ -39,13 +58,18 @@ TEXTS = {
         "back": "🔙 Back",
         "platform_select": "📌 Please select a Platform:",
         "fb_select": "📌 Please select Facebook service:",
-        "link_prompt": "🔗 Link received successfully!\n\n✅ Your order has been sent to Admin. Please wait for processing!",
+        "link_prompt": "🔗 Selected package: **{package}** (Price: **${price:.2f}**)\n\n🔗 Please send your Link here:",
+        "insufficient_balance": "❌ **Your balance is insufficient!**\n\n• Service price: **${price:.2f}**\n• Your balance: **${balance:.2f}**\n\nPlease click **💸 Add Fund** to top up your account first!",
+        "success_order": "✅ Thank you! Your order has been placed and sent to Admin.",
         "add_fund_prompt": "💸 **Add Fund**\n\nPlease enter the amount you want to top up (e.g. `10` or `5.5` in USD):",
         "slip_prompt": "📸 Please send your payment Slip here for Admin review and approval!",
+        "slip_success": "✅ Thank you! Your payment slip has been sent to Admin. Please wait for verification!",
         "account_info": "🪪 **Your Account Information**\n\n• Username: {username}\n• ID: {user_id}\n• Balance: ${balance:.2f}",
-        "contact_info": f"📞 Contact Admin:\n- Telegram: {ADMIN_USERNAME}",
-        "about_info": "ℹ️ This is an automated bot for Social Media services.",
-        "lang_select": "🌐 Please select your preferred language:"
+        "contact_info": f"Contact Admin:\n- Telegram: {ADMIN_USERNAME}",
+        "about_info": "This is an automated bot for Social Media services.",
+        "lang_select": "🌐 Please select your preferred language:",
+        "lang_changed": "✅ Switched to English successfully!",
+        "select_service_first": "Please select Add Fund feature first."
     }
 }
 
@@ -74,12 +98,30 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in user_balances:
         user_balances[user_id] = 0.00
 
-    # 1. ដំណាក់កាលរង់ចាំ Link (សម្រាប់បញ្ជាទិញសេវាកម្ម)
+    # 1. ដំណាក់កាលរង់ចាំ Link (កាត់លុយ និងបញ្ជូនទៅ Admin)
     if user_id in user_states and user_states[user_id].get('step') == 'waiting_link':
-        package = user_states[user_id].get('package')
+        state = user_states[user_id]
+        package = state.get('package')
+        price = state.get('price')
         link = text
         
-        await update.message.reply_text(t["link_prompt"], reply_markup=get_main_keyboard(lang))
+        current_balance = user_balances.get(user_id, 0.00)
+        
+        if current_balance < price:
+            await update.message.reply_text(
+                t["insufficient_balance"].format(price=price, balance=current_balance),
+                reply_markup=get_main_keyboard(lang), parse_mode="Markdown"
+            )
+            del user_states[user_id]
+            return
+            
+        user_balances[user_id] -= price
+        remaining_balance = user_balances[user_id]
+        
+        await update.message.reply_text(
+            f"{t['success_order']}\n💰 Balance: **${remaining_balance:.2f}**",
+            reply_markup=get_main_keyboard(lang), parse_mode="Markdown"
+        )
         
         admin_keyboard = [
             [
@@ -94,6 +136,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         caption = (
             "🔔 **មានការបញ្ជាទិញសេវាកម្មថ្មី!**\n\n"
             f"• សេវាកម្ម: {package}\n"
+            f"• តម្លៃ: ${price:.2f}\n"
             f"• តំណរ (Link): {link}\n"
             f"• អតិថិជន: {user.first_name} (@{user.username if user.username else 'None'})\n"
             f"• User ID: {user.id}"
@@ -116,31 +159,39 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_states[user_id] = {'step': 'waiting_fund_slip', 'amount': amount}
             await update.message.reply_text(f"✅ Amount: ${amount:.2f}\n\n{t['slip_prompt']}", reply_markup=get_main_keyboard(lang))
         except ValueError:
-            await update.message.reply_text("❌ សូមបញ្ចូលជាតួលេខឱ្យបានត្រឹមត្រូវ (ឧទាហរណ៍: 10 ឬ 5.5):")
+            error_msg = "❌ សូមបញ្ចូលជាតួលេខឱ្យបានត្រឹមត្រូវ (ឧទាហរណ៍: 10 ឬ 5.5):" if lang == "khmer" else "❌ Please enter a valid number (e.g. 10 or 5.5):"
+            await update.message.reply_text(error_msg)
         return
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Follow
+    # មុខងារជ្រើសរើសកញ្ចប់តម្លៃ និងពិនិត្យ Balance
+    def process_package_selection(pkg_key, display_name):
+        price = PRICES.get(pkg_key, 0.0)
+        current_balance = user_balances.get(user_id, 0.00)
+        
+        if current_balance < price:
+            return update.message.reply_text(
+                t["insufficient_balance"].format(price=price, balance=current_balance),
+                reply_markup=get_main_keyboard(lang), parse_mode="Markdown"
+            )
+        else:
+            user_states[user_id] = {'step': 'waiting_link', 'package': display_name, 'price': price}
+            return update.message.reply_text(
+                t["link_prompt"].format(package=display_name, price=price),
+                reply_markup=get_main_keyboard(lang), parse_mode="Markdown"
+            )
+
     if text in ["1K ~ 0.70$", "5K ~ 3.50$", "10K ~ 7.00$", "15K ~ 10.50$", "20K ~ 14.00$", "30K ~ 21.00$", "40K ~ 28.00$", "50K ~ 35.00$"]:
-        package_name = text.split(" ~ ")[0]
-        user_states[user_id] = {'step': 'waiting_link', 'package': f"FACEBOOK FOLLOW ({package_name})"}
-        await update.message.reply_text(f"Selected: FACEBOOK FOLLOW ({package_name})\n\n🔗 សូមផ្ញើតំណរ (Link) របស់អ្នកមកទីនេះ៖", reply_markup=get_main_keyboard(lang))
-        return
+        num = text.split(" ~ ")[0]
+        return await process_package_selection(f"FACEBOOK FOLLOW ({num})", f"FACEBOOK FOLLOW ({num})")
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Like
     if text in ["1K ~ 0.80$", "5K ~ 4.00$", "10K ~ 8.00$", "20K ~ 16.00$", "30K ~ 24.00$", "40K ~ 32.00$", "50K ~ 40.00$", "60K ~ 48.00$", "70K ~ 56.00$", "80K ~ 64.00$", "90K ~ 72.00$"]:
-        package_name = text.split(" ~ ")[0]
-        user_states[user_id] = {'step': 'waiting_link', 'package': f"FACEBOOK LIKE ({package_name})"}
-        await update.message.reply_text(f"Selected: FACEBOOK LIKE ({package_name})\n\n🔗 សូមផ្ញើតំណរ (Link) របស់អ្នកមកទីនេះ៖", reply_markup=get_main_keyboard(lang))
-        return
+        num = text.split(" ~ ")[0]
+        return await process_package_selection(f"FACEBOOK LIKE ({num})", f"FACEBOOK LIKE ({num})")
 
-    # ការជ្រើសរើសកញ្ចប់តម្លៃ Facebook Views
     if text in ["1K ~ 0.53$", "5K ~ 2.65$", "10K ~ 5.30$", "20K ~ 10.60$", "30K ~ 15.90$", "40K ~ 21.20$", "50K ~ 26.50$", "60K ~ 31.80$", "70K ~ 37.10$", "80K ~ 42.40$", "90K ~ 47.70$", "100K ~ 53.00$"]:
-        package_name = text.split(" ~ ")[0]
-        user_states[user_id] = {'step': 'waiting_link', 'package': f"FACEBOOK VIEWS ({package_name})"}
-        await update.message.reply_text(f"Selected: FACEBOOK VIEWS ({package_name})\n\n🔗 សូមផ្ញើតំណរ (Link) របស់អ្នកមកទីនេះ៖", reply_markup=get_main_keyboard(lang))
-        return
+        num = text.split(" ~ ")[0]
+        return await process_package_selection(f"FACEBOOK VIEWS ({num})", f"FACEBOOK VIEWS ({num})")
 
-    # ការរុករកម៉ឺនុយ
     if text == t["services"]:
         keyboard = [
             ["📘 Facebook", "🎵 TikTok"],
@@ -168,11 +219,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif text in ["🇰🇭 ភាសាខ្មែរ", "🇰🇭 Khmer"]:
         user_languages[user_id] = "khmer"
-        await update.message.reply_text("✅ បានប្តូរទៅជាភាសាខ្មែរជោគជ័យ!", reply_markup=get_main_keyboard("khmer"))
+        await update.message.reply_text(TEXTS["khmer"]["lang_changed"], reply_markup=get_main_keyboard("khmer"))
 
     elif text in ["🇬🇧 English"]:
         user_languages[user_id] = "english"
-        await update.message.reply_text("✅ Switched to English successfully!", reply_markup=get_main_keyboard("english"))
+        await update.message.reply_text(TEXTS["english"]["lang_changed"], reply_markup=get_main_keyboard("english"))
 
     elif text == "📘 Facebook":
         keyboard = [
@@ -227,7 +278,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == t["about"]:
         await update.message.reply_text(t["about_info"])
 
-# 3. មុខងារទទួលរូបភាព (Slip សម្រាប់ Add Fund)
+# 3. មុខងារទទួលរូបភាព Slip សម្រាប់ Add Fund
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     lang = get_lang(user_id)
@@ -238,7 +289,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount = state.get('amount')
         
         photo_file_id = update.message.photo[-1].file_id
-        await update.message.reply_text("✅ អរគុណ! វិក្កយបត្រដាក់ប្រាក់របស់អ្នកត្រូវបានបញ្ជូនជូន Admin រួចរាល់ហើយ។ សូមរង់ចាំការផ្ទៀងផ្ទាត់!", reply_markup=get_main_keyboard(lang))
+        await update.message.reply_text(t["slip_success"], reply_markup=get_main_keyboard(lang))
         
         admin_keyboard = [
             [
@@ -269,7 +320,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
         del user_states[user_id]
     else:
-        await update.message.reply_text("សូមជ្រើសរើសមុខងារ Add Fund ជាមុនសិន។")
+        await update.message.reply_text(t["select_service_first"])
 
 # 4. មុខងារ Admin ចុច Approve ឬ Reject
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -296,7 +347,6 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     elif action == "fundapprove":
         amount = float(parts[2])
-        # បន្ថែមទឹកប្រាក់ចូល Balance របស់ User ស្វ័យប្រវត្តិ
         if target_user_id not in user_balances:
             user_balances[target_user_id] = 0.00
         user_balances[target_user_id] += amount
@@ -314,7 +364,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif action == "fundreject":
         await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
         try:
-            await context.bot.send_message(chat_id=target_user_id, text="❌ សំណើដាក់ប្រាក់របស់អ្នកត្រូវបាន Admin បដិសេធ (Rejected)។ សូមទាក់ទងមកកាន់ Admin។")
+            await context.bot.send_message(target_user_id, text="❌ សំណើដាក់ប្រាក់របស់អ្នកត្រូវបាន Admin បដិសេធ (Rejected)។ សូមទាក់ទងមកកាន់ Admin។")
         except: pass
 
 if __name__ == "__main__":
