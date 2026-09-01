@@ -3,13 +3,23 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 
 user_states = {}
 
+# កូដពេលចាប់ផ្តើម /start (ផ្ញើសារស្វាគមន៍សិន រួចបង្ហាញម៉ឺនុយ)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 1. ផ្ញើសារស្វាគមន៍ស្អាតៗ
+    welcome_text = (
+        "👋 សួស្តីស្វាគមន៍មកកាន់ប្រព័ន្ធបំរើសេវាកម្ម Social Media របស់យើង!\n\n"
+        "✨ ទីនេះមានទទួលកុម្ម៉ង់សេវាកម្ម Facebook និង TikTok ក្នុងតម្លៃសមរម្យ និងឆាប់រហ័ស។\n\n"
+        "👇 សូមចុចជ្រើសរើសជម្រើសខាងក្រោមដើម្បីបន្ត៖"
+    )
+    
+    # 2. បង្កើតប៊ូតុង Reply Keyboard នៅខាងក្រោម
     keyboard = [
         ["🛍️ សេវាកម្ម", "ទំនាក់ទំនង (Contact)"],
         ["ព័ត៌មាន (About)"]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text("សួស្តី! សូមជ្រើសរើសជម្រើសខាងក្រោម៖", reply_markup=reply_markup)
+    
+    await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -22,7 +32,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             state['link'] = text
             state['step'] = 'waiting_slip'
             
-            # ផ្ញើរូបភាព QR Code (qr.jpg) ទៅឱ្យអតិថិជនស្វ័យប្រវត្តិ
             caption = (
                 "🔗 បានទទួល Link រួចរាល់!\n\n"
                 "💳 សូមធ្វើការស្កេន QR Code ខាងលើដើម្បីទូទាត់ប្រាក់ ៖\n\n"
@@ -37,7 +46,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         parse_mode="Markdown"
                     )
             except Exception as e:
-                await update.message.reply_text("🔗 បានទទួល Link រួចរាល់! សូមផ្ញើ Slip មកដើម្បីបន្ត។ (កត់សម្គាល់: រកមិនឃើញឯកសារ qr.jpg នៅលើ Server)")
+                await update.message.reply_text("🔗 បានទទួល Link រួចរាល់! សូមផ្ញើ Slip មកដើម្បីបន្ត។")
                 print(f"Error opening qr.jpg: {e}")
             return
 
@@ -50,10 +59,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("សូមជ្រើសរើសប្រភេទសេវាកម្មខាងក្រោម៖", reply_markup=reply_markup)
         
     elif text == "ទំនាក់ទំនង (Contact)":
-        await update.message.reply_text("នេះគឺជាឆាតទំនាក់ទំនងរបស់យើង។")
+        await update.message.reply_text("📞 ព័ត៌មានទំនាក់ទំនង:\n- Telegram Admin: @YourUsername\n- Channel: @YourChannel")
         
     elif text == "ព័ត៌មាន (About)":
-        await update.message.reply_text("នេះគឺជា Bot បម្រើសេវាកម្មផ្សេងៗ។")
+        await update.message.reply_text("ℹ️ នេះគឺជាប្រព័ន្ធ Bot ស្វ័យប្រវត្តិសម្រាប់ជួយសម្រួលដល់ការកុម្ម៉ង់សេវាកម្ម Social Media របស់អ្នក។")
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -104,9 +113,14 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     elif query.data == "fb_follow":
         price_keyboard = [
-            [InlineKeyboardButton("1K ~ 0.69$", callback_data="buy_1k")],
-            [InlineKeyboardButton("5K ~ 4.5$", callback_data="buy_5k")],
-            [InlineKeyboardButton("10K ~ 8.60$", callback_data="buy_10k")]
+            [InlineKeyboardButton("1K ~ 0.70$", callback_data="buy_1k")],
+            [InlineKeyboardButton("5K ~ 3.50$", callback_data="buy_5k")],
+            [InlineKeyboardButton("10K ~ 7.00$", callback_data="buy_10k")],
+            [InlineKeyboardButton("15K ~ 10.50$", callback_data="buy_15k")],
+            [InlineKeyboardButton("20K ~ 14.00$", callback_data="buy_20k")],
+            [InlineKeyboardButton("30K ~ 21.00$", callback_data="buy_30k")],
+            [InlineKeyboardButton("40K ~ 28.00$", callback_data="buy_40k")],
+            [InlineKeyboardButton("50K ~ 35.00$", callback_data="buy_50k")]
         ]
         reply_markup = InlineKeyboardMarkup(price_keyboard)
         await query.message.edit_text("📌 សូមជ្រើសរើសកញ្ចប់ FACEBOOK FOLLOW ៖", reply_markup=reply_markup)
@@ -116,7 +130,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "fb_views":
         await query.message.edit_text("អ្នកបានជ្រើសរើស៖ FACEBOOK VIEWS")
         
-    elif query.data in ["buy_1k", "buy_5k", "buy_10k"]:
+    elif query.data in ["buy_1k", "buy_5k", "buy_10k", "buy_15k", "buy_20k", "buy_30k", "buy_40k", "buy_50k"]:
         package_name = query.data.replace("buy_", "").upper()
         
         user_states[user_id] = {
