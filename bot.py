@@ -1,8 +1,9 @@
+import os
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 user_states = {}
-user_balances = {}  # សម្រាប់រក្សាទុកទឹកប្រាក់ (Balance) របស់អតិថិជនម្នាក់ៗ
+user_balances = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
@@ -21,9 +22,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     text = update.message.text
     
-    # ពិនិត្យមើលទឹកប្រាក់របស់ User ຖ້າទើបចូលប្រើលើកដំបូងកំណត់ជា 0.00$
     if user_id not in user_balances:
-        user_balances[user_id] = 0.00$ if "0.00$" else 0.00
+        user_balances[user_id] = 0.00
 
     if user_id in user_states and user_states[user_id].get('step') == 'waiting_link':
         state = user_states[user_id]
