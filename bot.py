@@ -1,4 +1,3 @@
-import os
 from telegram import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
@@ -35,32 +34,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         
+        qr_url = "https://cdn.phototourl.com/free/2026-09-01-1a3cfec5-d60d-4038-b50c-ac83f71acab2.jpg"
         caption = (
             "🔗 បានទទួល Link រួចរាល់!\n\n"
             "💳 សូមធ្វើការស្កេន QR Code ខាងលើដើម្បីទូទាត់ប្រាក់ ៖\n\n"
             "📸 បន្ទាប់ពីបង់ប្រាក់រួច សូម **ផ្ញើរូបភាពវិក្កយបត្រ (Slip)** មកកាន់ឆាតនេះដើម្បីបញ្ជាក់!"
         )
         
-        # ផ្ញើរូបភាព QR Code ដោយសុវត្ថិភាព (ការពារកុំឱ្យ Crash បើគ្មានឯកសារ qr.jpg)
-        if os.path.exists("qr.jpg"):
-            try:
-                with open("qr.jpg", "rb") as qr_photo:
-                    await context.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=qr_photo,
-                        caption=caption,
-                        parse_mode="Markdown",
-                        reply_markup=reply_markup
-                    )
-                return
-            except Exception as e:
-                print(f"Error sending qr.jpg: {e}")
-        
-        # បើគ្មាន qr.jpg ទេ ផ្ញើសារអត្ថបទធម្មតាជំនួសវិញដើម្បីកុំឱ្យ Error
-        await update.message.reply_text(
-            f"{caption}\n\n(⚠️ រកមិនឃើញឯកសារ qr.jpg នៅលើ Server ទេ សូមติดต่อ Admin)",
-            reply_markup=reply_markup
-        )
+        try:
+            await context.bot.send_photo(
+                chat_id=update.effective_chat.id,
+                photo=qr_url,
+                caption=caption,
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+            return
+        except Exception as e:
+            print(f"Error sending QR image: {e}")
+            await update.message.reply_text(
+                f"{caption}\n\n(⚠️ រូបភាព QR Code មានបញ្ហាបន្តិច ប៉ុន្តែអាចបន្តផ្ញើ Slip បាន)",
+                reply_markup=reply_markup
+            )
         return
 
     # ការជ្រើសរើសកញ្ចប់តម្លៃពីតារាងខាងក្រោម
@@ -125,7 +120,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "ព័ត៌មាន (About)":
         await update.message.reply_text("ℹ️ នេះគឺជាប្រព័ន្ធ Bot ស្វ័យប្រវត្តិសម្រាប់សេវាកម្ម Social Media។")
 
-# 3. កូដទទួលយករូបភាព Slip ពីអតិថិជន និងបាញ់ចូល Group ព្រមទាំងដាក់ប៊ូតុង Admin
+# 3. កូដទទួលយករូបភាព Slip ពីអតិថិជន និងបាញ់ចូល Group ព្រមទាំងភ្ជាប់ User ID ក្នុងប៊ូតុង Admin
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
@@ -146,8 +141,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         admin_keyboard = [
             [
-                InlineKeyboardButton("✅ បញ្ជាក់", callback_data="admin_approve"),
-                InlineKeyboardButton("❌ មិនយល់ព្រម", callback_data="admin_reject")
+                InlineKeyboardButton("✅ បញ្ជាក់", callback_data=f"approve_{user_id}"),
+                InlineKeyboardButton("❌ មិនយល់ព្រម", callback_data=f"reject_{user_id}")
             ]
         ]
         admin_markup = InlineKeyboardMarkup(admin_keyboard)
@@ -176,7 +171,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("សូមជ្រើសរើសសេវាកម្មតាមរយៈមឺនុយជាមុនសិន។")
 
-# 4. កូដពេល Admin ចុចលើប៊ូតុងក្នុង Group
+# 4. កូដពេល Admin ចុចប៊ូតុង ព្រមទាំងផ្ញើសារជូនដំណឹងទៅ User វិញស្វ័យប្រវត្តិ
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -184,12 +179,34 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     original_caption = query.message.caption or ""
     
-    if data == "admin_approve":
+    action, target_user_id = data.split("_")
+    target_user_id = int(target_user_id)
+    
+    if action == "approve":
         new_caption = original_caption + "\n\n🟢 **ស្ថានភាព៖ បានបញ្ជាក់ (Approved) ✅**"
         await query.edit_message_caption(caption=new_caption, parse_mode="Markdown")
-    elif data == "admin_reject":
+        
+        try:
+            await context.bot.send_message(
+                chat_id=target_user_id,
+                text="🎉 **ដំណឹងល្អ!** ការកុម្ម៉ង់សេវាកម្មរបស់អ្នកត្រូវបាន Admin **បញ្ជាក់ (Approved) ✅** រួចរាល់ហើយ! យើងកំពុងដំណើរការជូនលោកអ្នកឆាប់ៗនេះ។",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"Error notifying user: {e}")
+            
+    elif action == "reject":
         new_caption = original_caption + "\n\n🔴 **ស្ថានភាព៖ មិនយល់ព្រម / បដិសេធ (Rejected) ❌**"
         await query.edit_message_caption(caption=new_caption, parse_mode="Markdown")
+        
+        try:
+            await context.bot.send_message(
+                chat_id=target_user_id,
+                text="❌ **សូមអភ័យទោស!** ការកុម្ម៉ង់សេវាកម្មរបស់អ្នកត្រូវបាន Admin **មិនយល់ព្រម (Rejected) ❌** (អាចមកពីវិក្កយបត្រមិនត្រឹមត្រូវ)។ សូមទំនាក់ទំនងមកកាន់ Admin ផ្ទាល់។",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"Error notifying user: {e}")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
