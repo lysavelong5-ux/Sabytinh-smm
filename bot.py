@@ -189,44 +189,50 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     original_caption = query.message.caption or ""
     
-    if data.startswith("approve_"):
-        target_user_id = int(data.split("_")[1])
-        await query.edit_message_caption(caption=original_caption + "\n\nStatus: Approved ✅", parse_mode="Markdown")
-        try: 
-            await context.bot.send_message(chat_id=target_user_id, text="Your order has been Approved! ✅")
-        except: pass
-        
-    elif data.startswith("reject_"):
-        target_user_id = int(data.split("_")[1])
-        await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
-        try: 
-            await context.bot.send_message(chat_id=target_user_id, text="Your order has been Rejected. ❌")
-        except: pass
-        
-    elif data.startswith("fundapprove_"):
+    try:
         parts = data.split("_")
-        target_user_id = int(parts[1])
-        amount = float(parts[2])
+        action = parts[0]
         
-        if target_user_id not in user_balances:
-            user_balances[target_user_id] = 0.00
-        user_balances[target_user_id] += amount
-        
-        await query.edit_message_caption(caption=original_caption + f"\n\nStatus: Approved ✅ (+${amount:.2f})", parse_mode="Markdown")
-        try: 
-            await context.bot.send_message(
-                chat_id=target_user_id, 
-                text=f"🎉 Admin approved your top-up of **${amount:.2f}**!\n💰 Balance: **${user_balances[target_user_id]:.2f}**", 
-                parse_mode="Markdown"
-            )
-        except: pass
-        
-    elif data.startswith("fundreject_"):
-        target_user_id = int(data.split("_")[1])
-        await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
-        try: 
-            await context.bot.send_message(chat_id=target_user_id, text="❌ Top-up request rejected.")
-        except: pass
+        if action == "approve":
+            target_user_id = int(parts[1])
+            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Approved ✅", parse_mode="Markdown")
+            try: 
+                await context.bot.send_message(chat_id=target_user_id, text="Your order has been Approved! ✅")
+            except: pass
+            
+        elif action == "reject":
+            target_user_id = int(parts[1])
+            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
+            try: 
+                await context.bot.send_message(chat_id=target_user_id, text="Your order has been Rejected. ❌")
+            except: pass
+            
+        elif action == "fundapprove":
+            target_user_id = int(parts[1])
+            amount = float(parts[2])
+            
+            if target_user_id not in user_balances:
+                user_balances[target_user_id] = 0.00
+            user_balances[target_user_id] += amount
+            
+            await query.edit_message_caption(caption=original_caption + f"\n\nStatus: Approved ✅ (+${amount:.2f})", parse_mode="Markdown")
+            try: 
+                await context.bot.send_message(
+                    chat_id=target_user_id, 
+                    text=f"🎉 Admin approved your top-up of **${amount:.2f}**!\n💰 Balance: **${user_balances[target_user_id]:.2f}**", 
+                    parse_mode="Markdown"
+                )
+            except: pass
+            
+        elif action == "fundreject":
+            target_user_id = int(parts[1])
+            await query.edit_message_caption(caption=original_caption + "\n\nStatus: Rejected ❌", parse_mode="Markdown")
+            try: 
+                await context.bot.send_message(chat_id=target_user_id, text="❌ Top-up request rejected.")
+            except: pass
+            
+    except Exception as e:
+        print(f"Error in admin_callback: {e}")
 
 if __name__ == "__main__":
     TOKEN = "8675478122:AAFem3pCVLz_zZBebYuRmWcKGFAR1FBGY5Y"
